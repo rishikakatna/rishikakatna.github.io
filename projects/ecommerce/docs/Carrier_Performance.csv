@@ -1,0 +1,5 @@
+carrier_name,shipments,avg_delivery_days,on_time_pct,avg_delay_days,delayed_shipments
+DHL,1200,5.08,100.00,0.00,0
+UPS,1200,5.08,100.00,0.00,0
+USPS,1200,5.08,100.00,0.00,0
+FedEx,1000,5.33,91.70,0.08,83

@@ -1,0 +1,2 @@
+total_orders,confirmed_orders,cancel_rate_pct,total_payments,payment_success_rate_pct,total_shipments,avg_delivery_days,on_time_delivery_pct,delayed_shipments_pct
+5000,4750,5.00,4750,96.84,4600,5.14,98.20,1.80

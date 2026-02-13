@@ -1,0 +1,178 @@
+Project: Operational Analytics for an E-Commerce Order & Delivery Tracking System
+DB: MySQL 8.0+
+Author: Rishika Katna
+File: 01_schema.sql
+
+CREATE DATABASE IF NOT EXISTS ecommerce_ops_analytics;
+USE ecommerce_ops_analytics;
+
+Clean re-run (safe for development)
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS delivery_status_history;
+DROP TABLE IF EXISTS shipments;
+DROP TABLE IF EXISTS payment_attempts;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS customers;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+1) Customers
+CREATE TABLE customers (
+  customer_id        BIGINT PRIMARY KEY,
+  full_name          VARCHAR(120) NOT NULL,
+  email              VARCHAR(180) NOT NULL,
+  phone              VARCHAR(30),
+  region             VARCHAR(50) NOT NULL,
+  signup_date        DATE NOT NULL,
+  is_active          TINYINT(1) NOT NULL DEFAULT 1,
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_customers_email (email)
+);
+
+2) Products
+CREATE TABLE products (
+  product_id         BIGINT PRIMARY KEY,
+  sku                VARCHAR(40) NOT NULL,
+  product_name       VARCHAR(160) NOT NULL,
+  category           VARCHAR(60) NOT NULL,
+  unit_price         DECIMAL(10,2) NOT NULL,
+  unit_cost          DECIMAL(10,2) NOT NULL,
+  is_active          TINYINT(1) NOT NULL DEFAULT 1,
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_products_sku (sku),
+  CHECK (unit_price >= 0),
+  CHECK (unit_cost >= 0)
+);
+
+3) Orders
+CREATE TABLE orders (
+  order_id           BIGINT PRIMARY KEY,
+  customer_id        BIGINT NOT NULL,
+  order_datetime     DATETIME NOT NULL,
+  order_status       ENUM('CREATED','CONFIRMED','CANCELLED') NOT NULL,
+  currency           CHAR(3) NOT NULL DEFAULT 'USD',
+  channel            ENUM('WEB','MOBILE') NOT NULL DEFAULT 'WEB',
+  subtotal_amount    DECIMAL(12,2) NOT NULL,
+  shipping_amount    DECIMAL(12,2) NOT NULL,
+  tax_amount         DECIMAL(12,2) NOT NULL,
+  total_amount       DECIMAL(12,2) NOT NULL,
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_orders_customer
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+  CHECK (subtotal_amount >= 0),
+  CHECK (shipping_amount >= 0),
+  CHECK (tax_amount >= 0),
+  CHECK (total_amount >= 0)
+);
+
+CREATE INDEX idx_orders_customer_dt ON orders(customer_id, order_datetime);
+
+4) Order Items
+CREATE TABLE order_items (
+  order_item_id      BIGINT PRIMARY KEY,
+  order_id           BIGINT NOT NULL,
+  product_id         BIGINT NOT NULL,
+  quantity           INT NOT NULL,
+  unit_price         DECIMAL(10,2) NOT NULL,
+  unit_cost          DECIMAL(10,2) NOT NULL,
+  line_total         DECIMAL(12,2) NOT NULL,
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_order_items_order
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+  CONSTRAINT fk_order_items_product
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+  CHECK (quantity > 0),
+  CHECK (unit_price >= 0),
+  CHECK (unit_cost >= 0),
+  CHECK (line_total >= 0)
+);
+
+CREATE INDEX idx_order_items_order ON order_items(order_id);
+
+5) Payments (one per order; attempts tracked separately)
+CREATE TABLE payments (
+  payment_id         BIGINT PRIMARY KEY,
+  order_id           BIGINT NOT NULL,
+  payment_method     ENUM('CARD','UPI','PAYPAL','WALLET') NOT NULL,
+  payment_status     ENUM('PENDING','SUCCESS','FAILED','CANCELLED') NOT NULL,
+  authorized_amount  DECIMAL(12,2) NOT NULL,
+  gateway_name       VARCHAR(60) NOT NULL,
+  created_at         DATETIME NOT NULL,
+  updated_at         DATETIME NOT NULL,
+  CONSTRAINT fk_payments_order
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+  UNIQUE KEY uq_payments_order (order_id),
+  CHECK (authorized_amount >= 0)
+);
+
+6) Payment Attempts (retry logic)
+CREATE TABLE payment_attempts (
+  attempt_id         BIGINT PRIMARY KEY,
+  payment_id         BIGINT NOT NULL,
+  attempt_number     INT NOT NULL,
+  attempt_datetime   DATETIME NOT NULL,
+  attempt_outcome    ENUM('SUCCESS','FAILED') NOT NULL,
+  failure_reason     VARCHAR(120),
+  gateway_ref        VARCHAR(80),
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_payment_attempts_payment
+    FOREIGN KEY (payment_id) REFERENCES payments(payment_id),
+  UNIQUE KEY uq_payment_attempts_payment_attempt (payment_id, attempt_number),
+  CHECK (attempt_number >= 1)
+);
+
+CREATE INDEX idx_payment_attempts_dt ON payment_attempts(attempt_datetime);
+
+7) Shipments (tracking + partner)
+CREATE TABLE shipments (
+  shipment_id        BIGINT PRIMARY KEY,
+  order_id           BIGINT NOT NULL,
+  tracking_id        VARCHAR(50) NOT NULL,
+  carrier_name       VARCHAR(60) NOT NULL,
+  origin_region      VARCHAR(50) NOT NULL,
+  destination_region VARCHAR(50) NOT NULL,
+  estimated_delivery_date DATE NOT NULL,
+  actual_delivery_date    DATE NULL,
+  shipment_created_at     DATETIME NOT NULL,
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_shipments_order
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+  UNIQUE KEY uq_shipments_tracking (tracking_id),
+  UNIQUE KEY uq_shipments_order (order_id)
+);
+
+CREATE INDEX idx_shipments_carrier ON shipments(carrier_name);
+
+8) Delivery Status History (Packed → Shipped → In Transit → Out for Delivery → Delivered)
+CREATE TABLE delivery_status_history (
+  status_event_id    BIGINT PRIMARY KEY,
+  shipment_id        BIGINT NOT NULL,
+  status_code        ENUM('PACKED','SHIPPED','IN_TRANSIT','OUT_FOR_DELIVERY','DELIVERED','EXCEPTION') NOT NULL,
+  status_datetime    DATETIME NOT NULL,
+  location_hint      VARCHAR(120),
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_status_history_shipment
+    FOREIGN KEY (shipment_id) REFERENCES shipments(shipment_id)
+);
+
+CREATE INDEX idx_status_history_shipment_dt ON delivery_status_history(shipment_id, status_datetime);
+
+9) Notifications (email/sms/push)
+CREATE TABLE notifications (
+  notification_id    BIGINT PRIMARY KEY,
+  order_id           BIGINT NOT NULL,
+  notification_type  ENUM('EMAIL','SMS','PUSH') NOT NULL,
+  event_code         ENUM('ORDER_CONFIRMED','PAYMENT_FAILED','PAYMENT_SUCCESS','PACKED','SHIPPED','OUT_FOR_DELIVERY','DELIVERED','DELAY_ALERT') NOT NULL,
+  sent_datetime      DATETIME NOT NULL,
+  delivery_status    ENUM('SENT','FAILED') NOT NULL DEFAULT 'SENT',
+  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notifications_order
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+CREATE INDEX idx_notifications_order_dt ON notifications(order_id, sent_datetime);

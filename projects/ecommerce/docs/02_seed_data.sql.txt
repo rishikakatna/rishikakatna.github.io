@@ -1,0 +1,485 @@
+Project: E-Commerce Order & Delivery Analytics
+File: 02_seed_data.sql
+Purpose: Insert realistic sample data
+
+USE ecommerce_ops_analytics;
+
+INSERT INTO customers
+(customer_id, full_name, email, phone, region, signup_date, is_active)
+VALUES
+(1, 'Aarav Patel', 'aarav.patel@email.com', '5551111001', 'West', '2024-01-05', 1),
+(2, 'Emily Johnson', 'emily.johnson@email.com', '5551111002', 'East', '2024-01-12', 1),
+(3, 'Rohit Sharma', 'rohit.sharma@email.com', '5551111003', 'South', '2024-02-03', 1),
+(4, 'Sophia Martinez', 'sophia.m@email.com', '5551111004', 'North', '2024-02-18', 1),
+(5, 'Daniel Kim', 'daniel.kim@email.com', '5551111005', 'West', '2024-03-01', 1);
+
+INSERT INTO products
+(product_id, sku, product_name, category, unit_price, unit_cost, is_active)
+VALUES
+(101, 'ELEC-001', 'Wireless Headphones', 'Electronics', 79.99, 42.00, 1),
+(102, 'ELEC-002', 'Portable Bluetooth Speaker', 'Electronics', 49.99, 25.00, 1),
+(103, 'HOME-001', 'Air Fryer 4QT', 'Home', 89.99, 55.00, 1),
+(104, 'HOME-002', 'Nonstick Cookware Set', 'Home', 129.99, 78.00, 1),
+(105, 'FASH-001', 'Men''s Running Shoes', 'Fashion', 69.99, 34.00, 1),
+(106, 'FASH-002', 'Women''s Denim Jacket', 'Fashion', 59.99, 28.00, 1),
+(107, 'BOOK-001', 'Productivity Playbook', 'Books', 19.99, 6.00, 1),
+(108, 'BEAU-001', 'Skincare Starter Kit', 'Beauty', 39.99, 15.00, 1),
+(109, 'SPORT-001', 'Yoga Mat Pro', 'Sports', 29.99, 10.00, 1),
+(110, 'ELEC-003', 'Smartwatch Band', 'Electronics', 14.99, 4.00, 1);
+
+Expand Customers to 500:
+INSERT INTO customers
+(customer_id, full_name, email, phone, region, signup_date, is_active)
+SELECT
+  n AS customer_id,
+  CONCAT('Customer ', n) AS full_name,
+  CONCAT('customer', n, '@email.com') AS email,
+  CONCAT('555', LPAD(n, 7, '0')) AS phone,
+  ELT(1 + (n % 4), 'North','South','East','West') AS region,
+  DATE_ADD('2024-01-01', INTERVAL (n % 365) DAY) AS signup_date,
+  1 AS is_active
+FROM (
+  WITH RECURSIVE seq AS (
+    SELECT 6 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 500
+  )
+  SELECT n FROM seq
+) t;
+
+Expand Products to 200:
+INSERT INTO products (product_id, sku, product_name, category, unit_price, unit_cost, is_active)
+SELECT
+  n AS product_id,
+  CONCAT(
+    ELT(1 + (n % 5), 'ELEC','HOME','FASH','BEAU','SPORT'),
+    '-',
+    LPAD(n, 3, '0')
+  ) AS sku,
+  CONCAT('Product ', n) AS product_name,
+  ELT(1 + (n % 5), 'Electronics','Home','Fashion','Beauty','Sports') AS category,
+  ROUND(10 + (n % 90) + ((n % 100) / 100), 2) AS unit_price,
+  ROUND((10 + (n % 90)) * 0.55, 2) AS unit_cost,
+  1 AS is_active
+FROM (
+  WITH RECURSIVE seq AS (
+    SELECT 111 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 300
+  )
+  SELECT n FROM seq
+) t;
+
+Insert into Orders:
+INSERT INTO orders
+(order_id, customer_id, order_datetime, order_status, currency, channel,
+ subtotal_amount, shipping_amount, tax_amount, total_amount)
+SELECT
+  n AS order_id,
+  1 + (n % 500) AS customer_id,
+  TIMESTAMP(DATE_ADD('2025-01-01', INTERVAL (n % 396) DAY)) + INTERVAL (n % 86400) SECOND AS order_datetime,
+  CASE
+    WHEN (n % 20) = 0 THEN 'CANCELLED'   -- ~5%
+    ELSE 'CONFIRMED'
+  END AS order_status,
+  'USD' AS currency,
+  CASE WHEN (n % 3) = 0 THEN 'MOBILE' ELSE 'WEB' END AS channel,
+  0.00, 0.00, 0.00, 0.00
+FROM (
+  WITH RECURSIVE seq AS (
+    SELECT 100001 AS n
+    UNION ALL
+    SELECT n + 1 FROM seq WHERE n < 105000
+  )
+  SELECT n FROM seq
+) t;
+
+Insert into Order Items:
+INSERT INTO order_items
+(order_item_id, order_id, product_id, quantity, unit_price, unit_cost, line_total)
+SELECT
+  (o.order_id * 10) + d.n AS order_item_id,
+  o.order_id,
+  101 + ((o.order_id + d.n) % 200) AS product_id,
+  1 + ((o.order_id + d.n) % 3) AS quantity,
+  p.unit_price,
+  p.unit_cost,
+  ROUND((1 + ((o.order_id + d.n) % 3)) * p.unit_price, 2) AS line_total
+FROM orders o
+JOIN (
+  SELECT 1 AS n
+  UNION ALL SELECT 2
+  UNION ALL SELECT 3
+) d
+  ON d.n <= (1 + (o.order_id % 3))     -- ensures 1 to 3 items per order
+JOIN products p
+  ON p.product_id = 101 + ((o.order_id + d.n) % 200);
+
+Update Order Totals
+Now we compute subtotal_amount, shipping_amount, tax_amount, total_amount from order_items:
+UPDATE orders o
+JOIN (
+  SELECT order_id, ROUND(SUM(line_total), 2) AS subtotal
+  FROM order_items
+  GROUP BY order_id
+) x ON x.order_id = o.order_id
+SET
+  o.subtotal_amount = x.subtotal,
+  o.shipping_amount = CASE WHEN x.subtotal >= 50 THEN 0.00 ELSE 6.99 END,
+  o.tax_amount = ROUND(x.subtotal * 0.07, 2),
+  o.total_amount = ROUND(
+    x.subtotal
+    + (CASE WHEN x.subtotal >= 50 THEN 0.00 ELSE 6.99 END)
+    + (x.subtotal * 0.07), 2
+  );
+
+Update order totals:
+UPDATE orders o
+JOIN (
+  SELECT order_id, ROUND(SUM(line_total), 2) AS subtotal
+  FROM order_items
+  GROUP BY order_id
+) x ON x.order_id = o.order_id
+SET
+  o.subtotal_amount = x.subtotal,
+  o.shipping_amount = CASE WHEN x.subtotal >= 50 THEN 0.00 ELSE 6.99 END,
+  o.tax_amount = ROUND(x.subtotal * 0.07, 2),
+  o.total_amount = ROUND(
+    x.subtotal
+    + (CASE WHEN x.subtotal >= 50 THEN 0.00 ELSE 6.99 END)
+    + (x.subtotal * 0.07), 2
+  );
+
+Insert into payments(only for CONFIRMED orders):
+INSERT INTO payments
+(payment_id, order_id, payment_method, payment_status, authorized_amount, gateway_name, created_at, updated_at)
+SELECT
+  o.order_id + 500000 AS payment_id,
+  o.order_id,
+  ELT(1 + (o.order_id % 4), 'CARD','UPI','PAYPAL','WALLET') AS payment_method,
+  CASE
+    WHEN (o.order_id % 25) = 0 THEN 'FAILED'   -- ~4% fail
+    ELSE 'SUCCESS'
+  END AS payment_status,
+  o.total_amount AS authorized_amount,
+  ELT(1 + (o.order_id % 3), 'Stripe','PayPal','Razorpay') AS gateway_name,
+  o.order_datetime + INTERVAL 1 MINUTE AS created_at,
+  o.order_datetime + INTERVAL 2 MINUTE AS updated_at
+FROM orders o
+WHERE o.order_status = 'CONFIRMED';
+
+Insert payment attempts (retries):
+-- Attempt #1 for all payments
+INSERT INTO payment_attempts
+(attempt_id, payment_id, attempt_number, attempt_datetime, attempt_outcome, failure_reason, gateway_ref)
+SELECT
+  p.payment_id * 10 + 1 AS attempt_id,
+  p.payment_id,
+  1 AS attempt_number,
+  p.created_at AS attempt_datetime,
+  CASE
+    WHEN p.payment_status = 'SUCCESS' AND (p.payment_id % 10) <> 0 THEN 'SUCCESS'
+    ELSE 'FAILED'
+  END AS attempt_outcome,
+  CASE
+    WHEN p.payment_status = 'SUCCESS' AND (p.payment_id % 10) <> 0 THEN NULL
+    ELSE ELT(1 + (p.payment_id % 4), 'Insufficient Funds','Gateway Timeout','Card Declined','Network Error')
+  END AS failure_reason,
+  CONCAT('GW-', p.payment_id, '-1') AS gateway_ref
+FROM payments p;
+
+-- Attempt #2 for: (a) some successes, (b) all failed payments
+INSERT INTO payment_attempts
+(attempt_id, payment_id, attempt_number, attempt_datetime, attempt_outcome, failure_reason, gateway_ref)
+SELECT
+  p.payment_id * 10 + 2 AS attempt_id,
+  p.payment_id,
+  2 AS attempt_number,
+  p.created_at + INTERVAL 3 MINUTE AS attempt_datetime,
+  CASE
+    WHEN p.payment_status = 'SUCCESS' THEN 'SUCCESS'
+    ELSE 'FAILED'
+  END AS attempt_outcome,
+  CASE
+    WHEN p.payment_status = 'SUCCESS' THEN NULL
+    ELSE ELT(1 + (p.payment_id % 4), 'Insufficient Funds','Gateway Timeout','Card Declined','Network Error')
+  END AS failure_reason,
+  CONCAT('GW-', p.payment_id, '-2') AS gateway_ref
+FROM payments p
+WHERE (p.payment_status = 'FAILED') OR (p.payment_status = 'SUCCESS' AND (p.payment_id % 10) = 0);
+
+-- Attempt #3 for some failed payments (to simulate max retries)
+INSERT INTO payment_attempts
+(attempt_id, payment_id, attempt_number, attempt_datetime, attempt_outcome, failure_reason, gateway_ref)
+SELECT
+  p.payment_id * 10 + 3 AS attempt_id,
+  p.payment_id,
+  3 AS attempt_number,
+  p.created_at + INTERVAL 6 MINUTE AS attempt_datetime,
+  'FAILED' AS attempt_outcome,
+  ELT(1 + (p.payment_id % 4), 'Insufficient Funds','Gateway Timeout','Card Declined','Network Error') AS failure_reason,
+  CONCAT('GW-', p.payment_id, '-3') AS gateway_ref
+FROM payments p
+WHERE p.payment_status = 'FAILED' AND (p.payment_id % 2) = 0;
+
+Insert into shipments(only for successful payments):
+INSERT INTO shipments
+(shipment_id, order_id, tracking_id, carrier_name, origin_region, destination_region,
+ estimated_delivery_date, actual_delivery_date, shipment_created_at)
+SELECT
+  o.order_id + 700000 AS shipment_id,
+  o.order_id,
+  CONCAT('TRK-', o.order_id) AS tracking_id,
+  ELT(1 + (o.order_id % 4), 'FedEx', 'UPS', 'USPS', 'DHL') AS carrier_name,
+  'Warehouse-East' AS origin_region,
+  c.region AS destination_region,
+  DATE(o.order_datetime) + INTERVAL (3 + (o.order_id % 5)) DAY AS estimated_delivery_date,  -- 3–7 days
+  CASE
+    WHEN (o.order_id % 12) = 0 THEN DATE(o.order_datetime) + INTERVAL (5 + (o.order_id % 6)) DAY  -- delayed
+    ELSE DATE(o.order_datetime) + INTERVAL (3 + (o.order_id % 5)) DAY
+  END AS actual_delivery_date,
+  o.order_datetime + INTERVAL 2 HOUR AS shipment_created_at
+FROM orders o
+JOIN payments p   ON p.order_id = o.order_id AND p.payment_status = 'SUCCESS'
+JOIN customers c  ON c.customer_id = o.customer_id;
+
+Insert tracking status history (Packed → Delivered):
+INSERT INTO delivery_status_history
+(status_event_id, shipment_id, status_code, status_datetime, location_hint)
+SELECT
+  (s.shipment_id * 10) + d.step AS status_event_id,
+  s.shipment_id,
+  CASE d.step
+    WHEN 1 THEN 'PACKED'
+    WHEN 2 THEN 'SHIPPED'
+    WHEN 3 THEN 'IN_TRANSIT'
+    WHEN 4 THEN 'OUT_FOR_DELIVERY'
+    WHEN 5 THEN 'DELIVERED'
+  END AS status_code,
+  CASE d.step
+    WHEN 1 THEN s.shipment_created_at + INTERVAL 1 HOUR
+    WHEN 2 THEN s.shipment_created_at + INTERVAL 1 DAY
+    WHEN 3 THEN s.shipment_created_at + INTERVAL 2 DAY
+    WHEN 4 THEN TIMESTAMP(s.actual_delivery_date) - INTERVAL 6 HOUR
+    WHEN 5 THEN TIMESTAMP(s.actual_delivery_date) + INTERVAL 2 HOUR
+  END AS status_datetime,
+  CASE d.step
+    WHEN 1 THEN 'Fulfillment Center'
+    WHEN 2 THEN 'Carrier Pickup'
+    WHEN 3 THEN 'Transit Hub'
+    WHEN 4 THEN 'Local Facility'
+    WHEN 5 THEN 'Customer Address'
+  END AS location_hint
+FROM shipments s
+JOIN (
+  SELECT 1 AS step
+  UNION ALL SELECT 2
+  UNION ALL SELECT 3
+  UNION ALL SELECT 4
+  UNION ALL SELECT 5
+) d;
+
+Order + payment notifications:
+-- Order confirmed notification (for confirmed orders)
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  o.order_id + 900000 AS notification_id,
+  o.order_id,
+  ELT(1 + (o.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  'ORDER_CONFIRMED' AS event_code,
+  o.order_datetime + INTERVAL 2 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM orders o
+WHERE o.order_status = 'CONFIRMED';
+
+-- Payment outcome notification (success)
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  p.payment_id + 910000 AS notification_id,
+  p.order_id,
+  ELT(1 + (p.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  'PAYMENT_SUCCESS' AS event_code,
+  p.updated_at + INTERVAL 1 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM payments p
+WHERE p.payment_status = 'SUCCESS';
+
+-- Payment outcome notification (failed)
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  p.payment_id + 920000 AS notification_id,
+  p.order_id,
+  ELT(1 + (p.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  'PAYMENT_FAILED' AS event_code,
+  p.updated_at + INTERVAL 1 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM payments p
+WHERE p.payment_status = 'FAILED';
+
+Delivery event notifications:
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  (s.shipment_id * 10) + CASE h.status_code
+    WHEN 'PACKED' THEN 1
+    WHEN 'SHIPPED' THEN 2
+    WHEN 'OUT_FOR_DELIVERY' THEN 4
+    WHEN 'DELIVERED' THEN 5
+  END + 930000 AS notification_id,
+  s.order_id,
+  ELT(1 + (s.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  CASE h.status_code
+    WHEN 'PACKED' THEN 'PACKED'
+    WHEN 'SHIPPED' THEN 'SHIPPED'
+    WHEN 'OUT_FOR_DELIVERY' THEN 'OUT_FOR_DELIVERY'
+    WHEN 'DELIVERED' THEN 'DELIVERED'
+  END AS event_code,
+  h.status_datetime + INTERVAL 5 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM shipments s
+JOIN delivery_status_history h
+  ON h.shipment_id = s.shipment_id
+WHERE h.status_code IN ('PACKED','SHIPPED','OUT_FOR_DELIVERY','DELIVERED');
+
+Delay alerts (actual later than estimated by 1+ day):
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  s.shipment_id + 990000 AS notification_id,
+  s.order_id,
+  'SMS' AS notification_type,
+  'DELAY_ALERT' AS event_code,
+  TIMESTAMP(s.estimated_delivery_date) + INTERVAL 1 DAY AS sent_datetime,
+  'SENT' AS delivery_status
+FROM shipments s
+WHERE DATEDIFF(s.actual_delivery_date, s.estimated_delivery_date) >= 1;
+
+Insert shipments:
+INSERT INTO shipments
+(shipment_id, order_id, tracking_id, carrier_name, origin_region, destination_region,
+ estimated_delivery_date, actual_delivery_date, shipment_created_at)
+SELECT
+  o.order_id + 700000 AS shipment_id,
+  o.order_id,
+  CONCAT('TRK-', o.order_id) AS tracking_id,
+  ELT(1 + (o.order_id % 4), 'FedEx', 'UPS', 'USPS', 'DHL') AS carrier_name,
+  'Warehouse-East' AS origin_region,
+  c.region AS destination_region,
+  DATE(o.order_datetime) + INTERVAL (3 + (o.order_id % 5)) DAY AS estimated_delivery_date,  -- 3–7 days
+  CASE
+    WHEN (o.order_id % 12) = 0 THEN DATE(o.order_datetime) + INTERVAL (5 + (o.order_id % 6)) DAY  -- delayed
+    ELSE DATE(o.order_datetime) + INTERVAL (3 + (o.order_id % 5)) DAY
+  END AS actual_delivery_date,
+  o.order_datetime + INTERVAL 2 HOUR AS shipment_created_at
+FROM orders o
+JOIN payments p   ON p.order_id = o.order_id AND p.payment_status = 'SUCCESS'
+JOIN customers c  ON c.customer_id = o.customer_id;
+
+Insert delivery status history (Packed → Delivered):
+INSERT INTO delivery_status_history
+(status_event_id, shipment_id, status_code, status_datetime, location_hint)
+SELECT
+  (s.shipment_id * 10) + d.step AS status_event_id,
+  s.shipment_id,
+  CASE d.step
+    WHEN 1 THEN 'PACKED'
+    WHEN 2 THEN 'SHIPPED'
+    WHEN 3 THEN 'IN_TRANSIT'
+    WHEN 4 THEN 'OUT_FOR_DELIVERY'
+    WHEN 5 THEN 'DELIVERED'
+  END AS status_code,
+  CASE d.step
+    WHEN 1 THEN s.shipment_created_at + INTERVAL 1 HOUR
+    WHEN 2 THEN s.shipment_created_at + INTERVAL 1 DAY
+    WHEN 3 THEN s.shipment_created_at + INTERVAL 2 DAY
+    WHEN 4 THEN TIMESTAMP(s.actual_delivery_date) - INTERVAL 6 HOUR
+    WHEN 5 THEN TIMESTAMP(s.actual_delivery_date) + INTERVAL 2 HOUR
+  END AS status_datetime,
+  CASE d.step
+    WHEN 1 THEN 'Fulfillment Center'
+    WHEN 2 THEN 'Carrier Pickup'
+    WHEN 3 THEN 'Transit Hub'
+    WHEN 4 THEN 'Local Facility'
+    WHEN 5 THEN 'Customer Address'
+  END AS location_hint
+FROM shipments s
+JOIN (
+  SELECT 1 AS step
+  UNION ALL SELECT 2
+  UNION ALL SELECT 3
+  UNION ALL SELECT 4
+  UNION ALL SELECT 5
+) d;
+
+Order confirmed notifications (for confirmed orders):
+
+Payment outcome notifications (success + failed)
+Success:
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  p.payment_id + 910000 AS notification_id,
+  p.order_id,
+  ELT(1 + (p.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  'PAYMENT_SUCCESS' AS event_code,
+  p.updated_at + INTERVAL 1 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM payments p
+WHERE p.payment_status = 'SUCCESS';
+
+Failed:
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  p.payment_id + 920000 AS notification_id,
+  p.order_id,
+  ELT(1 + (p.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  'PAYMENT_FAILED' AS event_code,
+  p.updated_at + INTERVAL 1 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM payments p
+WHERE p.payment_status = 'FAILED';
+
+Delivery event notifications (Packed, Shipped, Out for Delivery, Delivered):
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  (s.shipment_id * 10)
+  + CASE h.status_code
+      WHEN 'PACKED' THEN 1
+      WHEN 'SHIPPED' THEN 2
+      WHEN 'OUT_FOR_DELIVERY' THEN 4
+      WHEN 'DELIVERED' THEN 5
+    END
+  + 930000 AS notification_id,
+  s.order_id,
+  ELT(1 + (s.order_id % 3), 'EMAIL','SMS','PUSH') AS notification_type,
+  CASE h.status_code
+    WHEN 'PACKED' THEN 'PACKED'
+    WHEN 'SHIPPED' THEN 'SHIPPED'
+    WHEN 'OUT_FOR_DELIVERY' THEN 'OUT_FOR_DELIVERY'
+    WHEN 'DELIVERED' THEN 'DELIVERED'
+  END AS event_code,
+  h.status_datetime + INTERVAL 5 MINUTE AS sent_datetime,
+  'SENT' AS delivery_status
+FROM shipments s
+JOIN delivery_status_history h
+  ON h.shipment_id = s.shipment_id
+WHERE h.status_code IN ('PACKED','SHIPPED','OUT_FOR_DELIVERY','DELIVERED');
+
+Delay alerts (delay ≥ 1 day):
+INSERT INTO notifications
+(notification_id, order_id, notification_type, event_code, sent_datetime, delivery_status)
+SELECT
+  s.shipment_id + 990000 AS notification_id,
+  s.order_id,
+  'SMS' AS notification_type,
+  'DELAY_ALERT' AS event_code,
+  TIMESTAMP(s.estimated_delivery_date) + INTERVAL 1 DAY AS sent_datetime,
+  'SENT' AS delivery_status
+FROM shipments s
+WHERE DATEDIFF(s.actual_delivery_date, s.estimated_delivery_date) >= 1;
+

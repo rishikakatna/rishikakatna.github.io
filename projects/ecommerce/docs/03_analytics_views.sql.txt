@@ -1,0 +1,94 @@
+-- File: 03_analytics_views.sql
+-- Purpose: Analytics views for Excel dashboard
+USE ecommerce_ops_analytics;
+
+View 1 — KPI Summary (1 row):
+DROP VIEW IF EXISTS vw_kpi_summary;
+
+CREATE VIEW vw_kpi_summary AS
+SELECT
+  -- Orders
+  (SELECT COUNT(*) FROM orders) AS total_orders,
+  (SELECT COUNT(*) FROM orders WHERE order_status = 'CONFIRMED') AS confirmed_orders,
+  ROUND(
+    (SELECT COUNT(*) FROM orders WHERE order_status = 'CANCELLED') /
+    (SELECT COUNT(*) FROM orders) * 100, 2
+  ) AS cancel_rate_pct,
+
+  -- Payments
+  (SELECT COUNT(*) FROM payments) AS total_payments,
+  ROUND(
+    (SELECT COUNT(*) FROM payments WHERE payment_status = 'SUCCESS') /
+    (SELECT COUNT(*) FROM payments) * 100, 2
+  ) AS payment_success_rate_pct,
+
+  -- Shipments / Delivery
+  (SELECT COUNT(*) FROM shipments) AS total_shipments,
+  ROUND(
+    (SELECT AVG(DATEDIFF(actual_delivery_date, DATE(shipment_created_at))) FROM shipments), 2
+  ) AS avg_delivery_days,
+
+  ROUND(
+    (SELECT AVG(CASE WHEN actual_delivery_date <= estimated_delivery_date THEN 1 ELSE 0 END) FROM shipments) * 100
+  , 2) AS on_time_delivery_pct,
+
+  ROUND(
+    (SELECT AVG(CASE WHEN DATEDIFF(actual_delivery_date, estimated_delivery_date) >= 1 THEN 1 ELSE 0 END) FROM shipments) * 100
+  , 2) AS delayed_shipments_pct;
+
+View 2 — Monthly Trends:
+DROP VIEW IF EXISTS vw_monthly_trends;
+
+CREATE VIEW vw_monthly_trends AS
+SELECT
+  DATE_FORMAT(o.order_datetime, '%Y-%m-01') AS month_start,
+  COUNT(*) AS orders_placed,
+  SUM(CASE WHEN o.order_status = 'CANCELLED' THEN 1 ELSE 0 END) AS orders_cancelled,
+  SUM(CASE WHEN p.payment_status = 'FAILED' THEN 1 ELSE 0 END) AS payment_failed_orders,
+  SUM(CASE WHEN p.payment_status = 'SUCCESS' THEN 1 ELSE 0 END) AS payment_success_orders,
+  ROUND(AVG(CASE WHEN s.shipment_id IS NOT NULL THEN DATEDIFF(s.actual_delivery_date, DATE(s.shipment_created_at)) END), 2) AS avg_delivery_days,
+  SUM(CASE WHEN s.shipment_id IS NOT NULL AND DATEDIFF(s.actual_delivery_date, s.estimated_delivery_date) >= 1 THEN 1 ELSE 0 END) AS delayed_shipments
+FROM orders o
+LEFT JOIN payments p ON p.order_id = o.order_id
+LEFT JOIN shipments s ON s.order_id = o.order_id
+GROUP BY DATE_FORMAT(o.order_datetime, '%Y-%m-01')
+ORDER BY month_start;
+
+Carrier Performance:
+DROP VIEW IF EXISTS vw_carrier_performance;
+
+CREATE VIEW vw_carrier_performance AS
+SELECT
+  carrier_name,
+  COUNT(*) AS shipments,
+  ROUND(AVG(DATEDIFF(actual_delivery_date, DATE(shipment_created_at))), 2) AS avg_delivery_days,
+  ROUND(AVG(CASE WHEN actual_delivery_date <= estimated_delivery_date THEN 1 ELSE 0 END) * 100, 2) AS on_time_pct,
+  ROUND(AVG(GREATEST(DATEDIFF(actual_delivery_date, estimated_delivery_date), 0)), 2) AS avg_delay_days,
+  SUM(CASE WHEN DATEDIFF(actual_delivery_date, estimated_delivery_date) >= 1 THEN 1 ELSE 0 END) AS delayed_shipments
+FROM shipments
+GROUP BY carrier_name
+ORDER BY shipments DESC;
+
+View 4 — Stage Cycle Time (find bottlenecks):
+This calculates average hours between each status transition:
+DROP VIEW IF EXISTS vw_stage_cycle_time;
+
+CREATE VIEW vw_stage_cycle_time AS
+WITH status_pairs AS (
+  SELECT
+    shipment_id,
+    status_code,
+    status_datetime,
+    LEAD(status_code) OVER (PARTITION BY shipment_id ORDER BY status_datetime) AS next_status,
+    LEAD(status_datetime) OVER (PARTITION BY shipment_id ORDER BY status_datetime) AS next_datetime
+  FROM delivery_status_history
+  WHERE status_code IN ('PACKED','SHIPPED','IN_TRANSIT','OUT_FOR_DELIVERY','DELIVERED')
+)
+SELECT
+  CONCAT(status_code, ' → ', next_status) AS stage_transition,
+  ROUND(AVG(TIMESTAMPDIFF(HOUR, status_datetime, next_datetime)), 2) AS avg_hours,
+  COUNT(*) AS transitions_count
+FROM status_pairs
+WHERE next_status IS NOT NULL
+GROUP BY CONCAT(status_code, ' → ', next_status)
+ORDER BY avg_hours DESC;
