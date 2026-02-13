@@ -1,96 +1,119 @@
-/* ===== GLOBAL STYLES ===== */
+/* ===== GLOBAL ===== */
+* { box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #ffffff;
-    color: #111;
-    line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  background: #ffffff;
+  color: #111;
+  line-height: 1.65;
 }
 
+a { color: inherit; }
+
 .section {
-    padding: 80px 10%;
+  padding: 70px 10%;
 }
 
 h1, h2, h3, h4 {
-    font-weight: 600;
+  margin: 0 0 14px 0;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 p {
-    color: #555;
+  margin: 0 0 16px 0;
+  color: #555;
 }
 
-/* ===== NAVIGATION ===== */
-
+/* ===== NAV ===== */
 nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 25px 10%;
-    border-bottom: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 10%;
+  border-bottom: 1px solid #eaeaea;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 nav h1 {
-    font-size: 20px;
-    font-weight: 600;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 nav ul {
-    list-style: none;
-    display: flex;
-    gap: 30px;
-    margin: 0;
-    padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 26px;
+  margin: 0;
+  padding: 0;
 }
 
 nav ul li a {
-    text-decoration: none;
-    color: #111;
-    font-weight: 500;
+  text-decoration: none;
+  color: #111;
+  font-weight: 500;
 }
 
 nav ul li a:hover {
-    color: #0A2E4D;
+  color: #0A2E4D;
 }
 
-/* ===== BUTTONS ===== */
+/* ===== HERO ===== */
+.hero {
+  padding: 95px 10% 55px;
+  max-width: 1000px;
+}
 
+.hero h2 {
+  font-size: 42px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+
+.hero p {
+  font-size: 18px;
+  max-width: 760px;
+  margin-bottom: 28px;
+  color: #555;
+}
+
+/* ===== BUTTONS (dignified + fancy) ===== */
 .btn {
-    display: inline-block;
-    padding: 12px 22px;
-    border: 1.8px solid #0A2E4D;
-    color: #0A2E4D;
-    text-decoration: none;
-    font-weight: 500;
-    margin: 8px 12px 8px 0;
-    letter-spacing: 0.2px;
-    background: transparent;
-    transition: all 0.25s ease;
+  display: inline-block;
+  padding: 12px 20px;
+  border: 1.8px solid #0A2E4D;
+  color: #0A2E4D;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 8px 12px 8px 0;
+  letter-spacing: 0.2px;
+  background: transparent;
+  transition: all 0.22s ease;
 }
 
 .btn:hover {
-    background-color: #0A2E4D;
-    color: #ffffff;
-    transform: translateY(-1px);
+  background: #0A2E4D;
+  color: #fff;
+  transform: translateY(-1px);
 }
 
-/* ===== CASE STUDY IMAGES ===== */
-
+/* ===== CASE IMAGE ===== */
 .case-img {
-    width: 100%;
-    border-radius: 10px;
-    border: 1px solid #eaeaea;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    margin: 18px 0 35px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.07);
+  margin: 18px 0 38px;
 }
 
 /* ===== FOOTER ===== */
-
 footer {
-    text-align: center;
-    padding: 40px 10%;
-    border-top: 1px solid #eaeaea;
-    color: #777;
-    font-size: 14px;
+  padding: 35px 10%;
+  border-top: 1px solid #eaeaea;
+  color: #777;
+  font-size: 14px;
 }
