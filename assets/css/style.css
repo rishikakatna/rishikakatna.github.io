@@ -1,0 +1,96 @@
+/* ===== GLOBAL STYLES ===== */
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    color: #111;
+    line-height: 1.6;
+}
+
+.section {
+    padding: 80px 10%;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 600;
+}
+
+p {
+    color: #555;
+}
+
+/* ===== NAVIGATION ===== */
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 10%;
+    border-bottom: 1px solid #eaeaea;
+}
+
+nav h1 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #111;
+    font-weight: 500;
+}
+
+nav ul li a:hover {
+    color: #0A2E4D;
+}
+
+/* ===== BUTTONS ===== */
+
+.btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border: 1.8px solid #0A2E4D;
+    color: #0A2E4D;
+    text-decoration: none;
+    font-weight: 500;
+    margin: 8px 12px 8px 0;
+    letter-spacing: 0.2px;
+    background: transparent;
+    transition: all 0.25s ease;
+}
+
+.btn:hover {
+    background-color: #0A2E4D;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* ===== CASE STUDY IMAGES ===== */
+
+.case-img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    margin: 18px 0 35px;
+}
+
+/* ===== FOOTER ===== */
+
+footer {
+    text-align: center;
+    padding: 40px 10%;
+    border-top: 1px solid #eaeaea;
+    color: #777;
+    font-size: 14px;
+}
