@@ -1,92 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Loan System Case Study | Rishika Katna</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loan Application & Approval System | Rishika Katna</title>
+
   <link rel="stylesheet" href="../../assets/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
 <nav>
-  <h1>Rishika Katna</h1>
-  <ul>
-    <li><a href="../../projects.html">Projects</a></li>
-    <li><a href="../../about.html">About</a></li>
-    <li><a href="../../resume.pdf" target="_blank">Resume</a></li>
-  </ul>
+  <div class="container nav-inner">
+    <div class="brand">Rishika Katna</div>
+    <ul>
+      <li><a href="../../projects.html">Projects</a></li>
+      <li><a href="../../about.html">About</a></li>
+      <li><a href="../../contact.html">Contact</a></li>
+      <li><a href="../../resume.pdf" target="_blank">Resume</a></li>
+    </ul>
+  </div>
 </nav>
 
-<section class="section" style="max-width:1000px;">
+<div class="container">
 
-  <h2 style="font-size:34px;">Loan Application & Approval System</h2>
-  <p style="color:#555;">
-    Business Analysis case study documenting requirements, decision logic, and end-to-end workflow modeling
-    for a digital loan processing system (application → eligibility → verification → decision → notifications).
-  </p>
+  <section class="section">
 
-  <br><br>
+    <div class="card" style="margin-bottom:18px;">
+      <div class="badge">Business Analysis Case Study</div>
+      <h2 class="section-title" style="margin-bottom:8px;">Loan Application & Approval System</h2>
+      <p style="margin-bottom:0;">
+        Requirements and process modeling package for a digital loan processing workflow
+        (application → eligibility → verification → decision → notifications) including decision logic and traceability.
+      </p>
 
-  <a class="btn" href="docs/BRD-Loan System.pdf" target="_blank">BRD</a>
-  <a class="btn" href="docs/FRD-Loan System.pdf" target="_blank">FRD</a>
-  <a class="btn" href="docs/Decision Table-Loan.xlsx" target="_blank">Decision Table</a>
-  <a class="btn" href="docs/Requirements Traceability Matrix-Loan.xlsx" target="_blank">RTM</a>
-  <a class="btn" href="docs/Loan CaseStudy-UseCases.pdf" target="_blank">Use Cases</a>
+      <div style="margin-top:14px;">
+        <a class="btn btn-primary" href="../../projects.html">Back to Projects</a>
+        <a class="btn" href="docs/BRD-Loan System.pdf" target="_blank">BRD</a>
+        <a class="btn" href="docs/FRD-Loan System.pdf" target="_blank">FRD</a>
+        <a class="btn" href="docs/Decision Table-Loan.xlsx" target="_blank">Decision Table</a>
+        <a class="btn" href="docs/Requirements Traceability Matrix-Loan.xlsx" target="_blank">RTM</a>
+        <a class="btn btn-ghost" href="docs/Loan CaseStudy-UseCases.pdf" target="_blank">Use Cases</a>
+      </div>
+    </div>
 
-  <hr style="margin:60px 0;">
+    <div class="grid">
 
-  <h3>Executive Summary</h3>
-  <p>
-    Created a structured requirements package to support implementation of a loan processing system.
-    Defined business rules for eligibility, modeled system interactions and workflows, and established traceability
-    from requirements to functional components. Deliverables are designed to support development alignment and UAT readiness.
-  </p>
+      <div class="col-12">
+        <div class="card">
+          <h3 class="project-title">Executive Summary</h3>
+          <p class="project-desc">
+            Developed a structured BA documentation set to support implementation readiness for a loan processing system.
+            Defined eligibility rules, modeled system interactions and workflows, and maintained traceability to support
+            development alignment and UAT preparation.
+          </p>
+          <div class="meta-row">
+            <div class="pill">BRD / FRD</div>
+            <div class="pill">Decision Logic</div>
+            <div class="pill">Traceability (RTM)</div>
+            <div class="pill">BPMN / Swimlane / DFD</div>
+          </div>
+        </div>
+      </div>
 
-  <hr style="margin:60px 0;">
+      <div class="col-12">
+        <div class="card">
+          <h3 class="project-title">Workflow & Modeling Highlights</h3>
+          <p class="project-desc">Click any diagram to view full size.</p>
 
-  <h3>Workflow & Modeling Highlights</h3>
-  <p style="color:#555;">
-    Selected diagrams from the case study illustrating system boundaries, data movement, and process orchestration.
-  </p>
+          <!-- Context / BRD Diagram -->
+          <a href="#zoom-context">
+            <img class="case-img diagram" src="images/Diag for BRD Loan.png" alt="Loan system context diagram">
+          </a>
+          <div id="zoom-context" class="zoom">
+            <a href="#">
+              <img src="images/Diag for BRD Loan.png" alt="Loan system context diagram enlarged">
+            </a>
+          </div>
 
-  <img class="case-img" src="images/Diag for BRD Loan.png" alt="Loan system context diagram">
-  <img class="case-img" src="images/Loan_BPMN 2.0 Diagram.drawio.png" alt="Loan BPMN diagram">
-  <img class="case-img" src="images/Loan_Swimlane Diagram.drawio.png" alt="Loan swimlane diagram">
-  <img class="case-img" src="images/Loan Application & Approval Usecase.drawio.png" alt="Loan use case diagram">
-  <img class="case-img" src="images/Loan Activity Diagram.drawio.png" alt="Loan activity diagram">
-  <img class="case-img" src="images/DFD Level 0 Loan System.png" alt="DFD Level 0">
-  <img class="case-img" src="images/DFD Level 1 Loan System.png" alt="DFD Level 1">
+          <!-- BPMN -->
+          <a href="#zoom-bpmn">
+            <img class="case-img diagram" src="images/Loan_BPMN 2.0 Diagram.drawio.png" alt="Loan BPMN diagram">
+          </a>
+          <div id="zoom-bpmn" class="zoom">
+            <a href="#">
+              <img src="images/Loan_BPMN 2.0 Diagram.drawio.png" alt="Loan BPMN diagram enlarged">
+            </a>
+          </div>
 
-  <hr style="margin:60px 0;">
+          <!-- Swimlane -->
+          <a href="#zoom-swimlane">
+            <img class="case-img diagram" src="images/Loan_Swimlane Diagram.drawio.png" alt="Loan swimlane diagram">
+          </a>
+          <div id="zoom-swimlane" class="zoom">
+            <a href="#">
+              <img src="images/Loan_Swimlane Diagram.drawio.png" alt="Loan swimlane diagram enlarged">
+            </a>
+          </div>
 
-  <h3>Key Business Rules Captured</h3>
-  <ul>
-    <li>Eligibility decision logic (income, credit score, debt-to-income, employment stability)</li>
-    <li>KYC verification handoffs and exception handling</li>
-    <li>Approval / rejection triggers and notification flows</li>
-    <li>Traceability mapping from requirements to functional components and test coverage</li>
-  </ul>
+          <!-- Use Case Diagram -->
+          <a href="#zoom-usecase">
+            <img class="case-img diagram" src="images/Loan Application & Approval Usecase.drawio.png" alt="Loan use case diagram">
+          </a>
+          <div id="zoom-usecase" class="zoom">
+            <a href="#">
+              <img src="images/Loan Application & Approval Usecase.drawio.png" alt="Loan use case diagram enlarged">
+            </a>
+          </div>
 
-  <hr style="margin:60px 0;">
+          <!-- Activity Diagram -->
+          <a href="#zoom-activity">
+            <img class="case-img diagram" src="images/Loan Activity Diagram.drawio.png" alt="Loan activity diagram">
+          </a>
+          <div id="zoom-activity" class="zoom">
+            <a href="#">
+              <img src="images/Loan Activity Diagram.drawio.png" alt="Loan activity diagram enlarged">
+            </a>
+          </div>
 
-  <h3>Artifacts</h3>
-  <p style="color:#555; margin-bottom:20px;">
-    Core documentation and models supporting implementation and validation.
-  </p>
+          <!-- DFD Level 0 -->
+          <a href="#zoom-dfd0">
+            <img class="case-img diagram" src="images/DFD Level 0 Loan System.png" alt="DFD Level 0">
+          </a>
+          <div id="zoom-dfd0" class="zoom">
+            <a href="#">
+              <img src="images/DFD Level 0 Loan System.png" alt="DFD Level 0 enlarged">
+            </a>
+          </div>
 
-  <a class="btn" href="docs/BRD-Loan System.pdf" target="_blank">BRD</a>
-  <a class="btn" href="docs/FRD-Loan System.pdf" target="_blank">FRD</a>
-  <a class="btn" href="docs/Decision Table-Loan.xlsx" target="_blank">Decision Table</a>
-  <a class="btn" href="docs/Requirements Traceability Matrix-Loan.xlsx" target="_blank">RTM</a>
-  <a class="btn" href="docs/Loan CaseStudy-UseCases.pdf" target="_blank">Use Cases</a>
+          <!-- DFD Level 1 -->
+          <a href="#zoom-dfd1">
+            <img class="case-img diagram" src="images/DFD Level 1 Loan System.png" alt="DFD Level 1">
+          </a>
+          <div id="zoom-dfd1" class="zoom">
+            <a href="#">
+              <img src="images/DFD Level 1 Loan System.png" alt="DFD Level 1 enlarged">
+            </a>
+          </div>
 
-</section>
+        </div>
+      </div>
 
-<footer>
-  © 2026 Rishika Katna · Tampa, FL
-</footer>
+      <div class="col-12">
+        <div class="card">
+          <h3 class="project-title">Key Business Rules Captured</h3>
+          <ul style="margin:0; padding-left:18px; color:#555;">
+            <li>Eligibility decision logic and approval/rejection triggers documented in the Decision Table.</li>
+            <li>KYC verification steps and exception handling modeled across the end-to-end workflow.</li>
+            <li>Notification flow mapping for decision outcomes and customer communications.</li>
+            <li>Traceability mapping from requirements → functional components to support validation and UAT readiness.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <h3 class="project-title">Artifacts</h3>
+          <p class="project-desc">Download project documentation used to drive implementation clarity.</p>
+
+          <a class="btn" href="docs/BRD-Loan System.pdf" target="_blank">BRD</a>
+          <a class="btn" href="docs/FRD-Loan System.pdf" target="_blank">FRD</a>
+          <a class="btn" href="docs/Decision Table-Loan.xlsx" target="_blank">Decision Table</a>
+          <a class="btn" href="docs/Requirements Traceability Matrix-Loan.xlsx" target="_blank">RTM</a>
+          <a class="btn btn-ghost" href="docs/Loan CaseStudy-UseCases.pdf" target="_blank">Use Cases</a>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <footer>
+    © 2026 Rishika Katna · Tampa, FL
+  </footer>
+
+</div>
 
 </body>
 </html>
-
