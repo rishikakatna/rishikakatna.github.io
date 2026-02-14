@@ -1,60 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About | Rishika Katna</title>
+
   <link rel="stylesheet" href="assets/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
 <nav>
-  <h1>Rishika Katna</h1>
-  <ul>
-    <li><a href="projects.html">Projects</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="resume.pdf" target="_blank">Resume</a></li>
-  </ul>
+  <div class="container nav-inner">
+    <div class="brand">Rishika Katna</div>
+    <ul>
+      <li><a href="projects.html">Projects</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="resume.pdf" target="_blank">Resume</a></li>
+    </ul>
+  </div>
 </nav>
 
-<section class="section" style="max-width:900px;">
+<div class="container">
 
-  <h2 style="font-size:34px;">About</h2>
+  <!-- HERO CARD -->
+  <section class="section">
 
-  <p>
-    Business Analyst with experience in requirements documentation, process modeling, and KPI-driven analytics.
-    I translate business needs into structured BRDs/FRDs, governed KPI frameworks, and decision-support dashboards.
-  </p>
+    <div class="card" style="padding:40px;">
 
-  <br>
+      <div class="badge">About</div>
 
-  <h3>Focus Areas</h3>
-  <ul>
-    <li>Requirements Documentation (BRD / FRD), User Stories, Acceptance Criteria</li>
-    <li>Decision Tables, Traceability (RTM), Impact Analysis</li>
-    <li>Process Modeling (BPMN, Swimlane, DFD), Workflow Optimization</li>
-    <li>SQL Analytics, Data Modeling Fundamentals, KPI Reporting</li>
-    <li>Power BI & Tableau dashboards for executive decision support</li>
-  </ul>
+      <h2 style="font-size:34px; margin-bottom:14px;">
+        Business Analyst · Process & Data Strategy
+      </h2>
 
-  <br>
+      <p style="font-size:18px; max-width:800px;">
+        I specialize in translating business needs into structured documentation,
+        governed KPI frameworks, and decision-support dashboards.
+        My approach blends analytical rigor with practical delivery —
+        ensuring clarity from requirements through implementation.
+      </p>
 
-  <h3>Contact</h3>
-  <p>
-    Email: rishika.katna@gmail.com<br>
-    LinkedIn: https://www.linkedin.com/in/
-rishika-katna-095a631bb
+      <div style="margin-top:20px;">
+        <a class="btn btn-primary" href="projects.html">View Projects</a>
+        <a class="btn" href="resume.pdf" target="_blank">Download Resume</a>
+        <a class="btn btn-ghost" href="contact.html">Contact</a>
+      </div>
 
-  </p>
+      <div class="meta-row" style="margin-top:18px;">
+        <div class="pill">BRD · FRD · RTM</div>
+        <div class="pill">Decision Tables</div>
+        <div class="pill">BPMN · DFD · Swimlanes</div>
+        <div class="pill">SQL · Excel · Power BI · Tableau</div>
+      </div>
 
-</section>
+    </div>
 
-<footer>
-  © 2026 Rishika Katna · Tampa, FL
-</footer>
+  </section>
+
+  <!-- TWO COLUMN SECTION -->
+  <section class="section">
+
+    <div class="grid">
+
+      <div class="col-6">
+        <div class="card">
+          <h3>What I Deliver</h3>
+          <p>
+            Structured documentation and analytics that reduce ambiguity,
+            align stakeholders, and support technical implementation.
+          </p>
+
+          <ul style="padding-left:18px; color:#555;">
+            <li>Requirements documentation (BRD, FRD, User Stories)</li>
+            <li>Business rules & decision logic definition</li>
+            <li>Requirements traceability & impact analysis</li>
+            <li>Process modeling & workflow optimization</li>
+            <li>KPI governance & reporting frameworks</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="card">
+          <h3>How I Work</h3>
+          <p>
+            I approach business analysis with a structured, outcome-focused mindset.
+          </p>
+
+          <ul style="padding-left:18px; color:#555;">
+            <li>Clarify business objectives before defining solutions</li>
+            <li>Translate stakeholder language into technical requirements</li>
+            <li>Use data to validate assumptions and measure impact</li>
+            <li>Collaborate closely with engineering & operations teams</li>
+            <li>Maintain governance and traceability throughout delivery</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- EXPERIENCE SNAPSHOT -->
+  <section class="section">
+
+    <div class="card">
+
+      <h3 style="margin-bottom:12px;">Professional Snapshot</h3>
+
+      <div class="meta-row">
+        <div class="pill">IT Operations Analysis</div>
+        <div class="pill">SLA Monitoring</div>
+        <div class="pill">Dashboard Development</div>
+        <div class="pill">Cross-Functional Alignment</div>
+        <div class="pill">Agile Support</div>
+        <div class="pill">UAT Readiness</div>
+      </div>
+
+      <p style="margin-top:16px;">
+        Currently based in Tampa, FL. Open to Business Analyst roles.
+      </p>
+
+    </div>
+
+  </section>
+
+  <footer>
+    © 2026 Rishika Katna · Tampa, FL ·
+    <a href="mailto:rishika.katna@gmail.com">Email</a> ·
+    <a href="https://www.linkedin.com/in/rishika-katna-095a631bb" target="_blank">LinkedIn</a>
+  </footer>
+
+</div>
 
 </body>
 </html>
-
